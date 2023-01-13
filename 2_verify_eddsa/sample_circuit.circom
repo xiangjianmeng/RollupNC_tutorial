@@ -1,3 +1,5 @@
+pragma circom 2.0.0;
+
 include "../circomlib/circuits/eddsamimc.circom";
 include "../circomlib/circuits/mimc.circom";
 
@@ -11,6 +13,7 @@ template VerifyEdDSAMiMC() {
     signal input R8y;
     signal input S;
     signal input M;
+    signal output sig;
     
     component verifier = EdDSAMiMCVerifier();   
     verifier.enabled <== 1;
@@ -20,6 +23,8 @@ template VerifyEdDSAMiMC() {
     verifier.R8y <== R8y;
     verifier.S <== S;
     verifier.M <== M;
+
+    sig <== S;
 }
 
 component main = VerifyEdDSAMiMC();

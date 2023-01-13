@@ -1,8 +1,10 @@
+pragma circom 2.0.0;
+
 template SimpleChecks() {
-    signal private input a;
-    signal private input b;
+    signal input a;
+    signal input b;
     signal input c;
-    signal private input d;
+    signal input d;
     signal output out;
     
     // force a + b = c
