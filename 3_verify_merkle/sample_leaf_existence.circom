@@ -1,3 +1,5 @@
+pragma circom 2.0.0;
+
 include "./sample_get_merkle_root.circom";
 include "../circomlib/circuits/mimc.circom";
 

@@ -1,6 +1,6 @@
-const mimcjs = require("../circomlib/src/mimc7.js");
+const buildMimc7 = require("circomlibjs").buildMimc7;
 const bigInt = require("snarkjs").bigInt;
-
+const m = buildMimc7();
 
 module.exports = {
 
@@ -9,7 +9,7 @@ module.exports = {
         var zeroCache = new Array(depth)
         zeroCache[0] = zeroLeafHash
         for (var i = 1; i < depth; i++){
-            zeroCache[i] = mimcjs.multiHash([zeroCache[i-1],zeroCache[i-1]])
+            zeroCache[i] = m.multiHash([zeroCache[i-1],zeroCache[i-1]])
         }
         return zeroCache
     },
@@ -92,14 +92,16 @@ module.exports = {
         }
     },
 
-    treeFromLeafArray: function(leafArray){
+    treeFromLeafArray: function(leafArray, m){
         depth = module.exports.getBase2Log(leafArray.length);
         tree = Array(depth);
 
-        tree[depth - 1] = module.exports.pairwiseHash(leafArray)
+        tree[depth - 1] = module.exports.pairwiseHash(leafArray, m)
+
+        console.log(tree[1][0])
 
         for (j = depth - 2; j >= 0; j--){
-            tree[j] = module.exports.pairwiseHash(tree[j+1])
+            tree[j] = module.exports.pairwiseHash(tree[j+1], m)
         }
 
         // return treeRoot[depth-1]
@@ -110,17 +112,19 @@ module.exports = {
         return module.exports.treeFromLeafArray(leafArray)[0][0]
     },
 
-    pairwiseHash: function(array){
+    pairwiseHash: function(array, m){
         if (array.length % 2 == 0){
             arrayHash = []
             for (i = 0; i < array.length; i = i + 2){
-                arrayHash.push(mimcjs.multiHash(
-                    [array[i].toString(),array[i+1].toString()]
-                ))
+                let hash = m.multiHash(
+                    [m.F.toString(array[i]), m.F.toString(array[i+1])]
+                )
+                arrayHash.push(hash)
             }
             return arrayHash
         } else {
-            console.log('array must have even number of elements')
+            throw (e)
+            // console.log('array must have even number of elements')
         }
     },
 
