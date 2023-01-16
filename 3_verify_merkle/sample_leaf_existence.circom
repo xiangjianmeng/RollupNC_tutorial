@@ -6,7 +6,7 @@ include "../circomlib/circuits/mimc.circom";
 // checks for existence of leaf in tree of depth k
 
 template LeafExistence(k){
-// k is depth of tree
+    // k is depth of tree
 
     signal input leaf;
     signal input root;
@@ -26,4 +26,4 @@ template LeafExistence(k){
 
 }
 
-component main = LeafExistence(2);
+component main {public [root]} = LeafExistence(2);

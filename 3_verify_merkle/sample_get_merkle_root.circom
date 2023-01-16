@@ -31,4 +31,4 @@ template GetMerkleRoot(k){
 
 }
 
-component main = GetMerkleRoot(2);
+// component main = GetMerkleRoot(2);
