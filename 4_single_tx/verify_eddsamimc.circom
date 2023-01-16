@@ -1,3 +1,5 @@
+pragma circom 2.0.0;
+
 include "../circomlib/circuits/eddsamimc.circom";
 include "../circomlib/circuits/mimc.circom";
 
@@ -7,9 +9,10 @@ template VerifyEdDSAMiMC(k) {
     signal input R8x;
     signal input R8y;
     signal input S;
-    signal private input preimage[k];
+    signal input preimage[k];
     
     component M = MultiMiMC7(k,91);
+    M.k <== 0;
     for (var i = 0; i < k; i++){
         M.in[i] <== preimage[i];
     }

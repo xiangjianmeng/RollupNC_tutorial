@@ -1,3 +1,5 @@
+pragma circom 2.0.0;
+
 include "./get_merkle_root.circom";
 include "../circomlib/circuits/mimc.circom";
 
@@ -7,12 +9,13 @@ template LeafExistence(k, l){
 // k is depth of tree
 // l is length of preimage of leaf
 
-    signal private input preimage[l]; 
+    signal input preimage[l];
     signal input root;
     signal input paths2_root_pos[k];
     signal input paths2_root[k];
 
     component leaf = MultiMiMC7(l,91);
+    leaf.k <== 0;
     for (var i = 0; i < l; i++){
         leaf.in[i] <== preimage[i];
     }
