@@ -72,7 +72,8 @@ module.exports = {
             }
             return arrayClone
         } else {
-            console.log("please enter pubKeys as an array")
+            throw (e)
+            // console.log("please enter pubKeys as an array")
         }
     },
 
@@ -88,7 +89,8 @@ module.exports = {
             }
             return arrayClone
         } else {
-            console.log("please enter pubKeys as an array")
+            throw (e)
+            // console.log("please enter pubKeys as an array")
         }
     },
 
@@ -97,8 +99,6 @@ module.exports = {
         tree = Array(depth);
 
         tree[depth - 1] = module.exports.pairwiseHash(leafArray, m)
-
-        console.log(tree[1][0])
 
         for (j = depth - 2; j >= 0; j--){
             tree[j] = module.exports.pairwiseHash(tree[j+1], m)
