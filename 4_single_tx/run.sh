@@ -61,6 +61,10 @@ if [ "$TYPE" == "WASM" ]; then
   # Verifying a Proof
   snarkjs groth16 verify verification_key.json public.json proof.json
 
+  # generate verify sol
+  snarkjs zkey export solidityverifier ${NAME}_0001.zkey verifier.sol
+
+
 else
   cd ./${NAME}_cpp
   make

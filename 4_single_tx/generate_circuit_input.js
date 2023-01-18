@@ -66,10 +66,11 @@ async function generate() {
         [newBob.pubkey[0], newBob.pubkey[1], newBob.balance]
     );
 
+    const F = eddsa.babyJub.F;
+
 // update final root
     const final_root = mimc.multiHash([newAliceHash, newBobHash])
-
-    const F = eddsa.babyJub.F;
+    console.log(F.toString(final_root));
 
     const inputs = {
         "accounts_root": F.toString(accounts_root),
