@@ -17,5 +17,5 @@ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 # -d to assign work dir
 # -n to assign trusted setup power
 # -n to assign .circom filename in work dir
-./run.sh -d ./4_ -p 14 -n sample_circuit
+./run.sh -d ./4_single_tx -p 14 -n sample_circuit
 ```
