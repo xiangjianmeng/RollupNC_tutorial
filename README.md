@@ -2,6 +2,8 @@
 
 Head over to : https://keen-noyce-c29dfa.netlify.app
 
+circom doc refer to https://docs.circom.io/getting-started/installation/
+
 ## 1. install snarkjs
 ```shell
 npm install -g snarkjs@0.5.0
