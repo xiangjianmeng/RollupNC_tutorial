@@ -100,22 +100,15 @@ contract MiMC2 {
         13602139229813231349386885113156901793661719180900395818909719758150455500533
     ];
 
-    function hashinter(uint256 x_in, uint256 k)
-        public
-        view
-        returns (uint256 out)
-    {
-        uint256 t = 0;
-        uint256[nrounds] memory t2;
-        uint256[nrounds] memory t4;
+    function hash(uint256 x_in, uint256 k) private view returns (uint256 out) {
         uint256[nrounds] memory t6;
         uint256[nrounds - 1] memory t7;
 
         for (uint256 i = 0; i < nrounds; i++) {
-            t = (i == 0) ? k + x_in : k + t7[i - 1] + c[i];
-            t2[i] = mulmod(t, t, FIELD_SIZE);
-            t4[i] = mulmod(t2[i], t2[i], FIELD_SIZE);
-            t6[i] = mulmod(t4[i], t2[i], FIELD_SIZE);
+            uint256 t = (i == 0) ? k + x_in : k + t7[i - 1] + c[i];
+            uint256 t2 = mulmod(t, t, FIELD_SIZE);
+            uint256 t4 = mulmod(t2, t2, FIELD_SIZE);
+            t6[i] = mulmod(t4, t2, FIELD_SIZE);
             if (i < nrounds - 1) {
                 t7[i] = mulmod(t6[i], t, FIELD_SIZE);
             } else {
@@ -126,19 +119,18 @@ contract MiMC2 {
 
     uint256 constant nInputs = 2;
 
-    function hash(uint256 ina, uint256 inb) public view returns (uint256 out) {
-        uint256 k = 0;
+    function multiHash(uint256[nInputs] memory inputs)
+        public
+        view
+        returns (uint256 out)
+    {
         uint256[nInputs + 1] memory r;
-        uint256[nInputs] memory inputs;
 
-        inputs[0] = ina;
-        inputs[1] = inb;
-
-        r[0] = k;
+        r[0] = 0;
         for (uint256 i = 0; i < nInputs; i++) {
             r[i + 1] = addmod(
                 addmod(r[i], inputs[i], FIELD_SIZE),
-                hashinter(inputs[i], r[i]),
+                hash(inputs[i], r[i]),
                 FIELD_SIZE
             );
         }
