@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0+
 pragma solidity >=0.7.0 <0.9.0;
 
-contract MiMC2 {
+contract MiMC {
     uint256 constant nrounds = 91;
     // hex is 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
     uint256 constant FIELD_SIZE =
@@ -105,7 +105,9 @@ contract MiMC2 {
         uint256[nrounds - 1] memory t7;
 
         for (uint256 i = 0; i < nrounds; i++) {
-            uint256 t = (i == 0) ? k + x_in : k + t7[i - 1] + c[i];
+            uint256 t = (i == 0)
+                ? addmod(k, x_in, FIELD_SIZE)
+                : addmod(addmod(k, t7[i - 1], FIELD_SIZE), c[i], FIELD_SIZE);
             uint256 t2 = mulmod(t, t, FIELD_SIZE);
             uint256 t4 = mulmod(t2, t2, FIELD_SIZE);
             t6[i] = mulmod(t4, t2, FIELD_SIZE);
@@ -117,24 +119,22 @@ contract MiMC2 {
         }
     }
 
-    uint256 constant nInputs = 2;
-
-    function multiHash(uint256[nInputs] memory inputs)
+    function multiHash(uint256[] memory inputs)
         public
         view
         returns (uint256 out)
     {
-        uint256[nInputs + 1] memory r;
+        uint256 r = 0;
 
-        r[0] = 0;
-        for (uint256 i = 0; i < nInputs; i++) {
-            r[i + 1] = addmod(
-                addmod(r[i], inputs[i], FIELD_SIZE),
-                hash(inputs[i], r[i]),
+        for (uint256 i = 0; i < inputs.length; i++) {
+            uint256 rn = addmod(
+                addmod(r, inputs[i], FIELD_SIZE),
+                hash(inputs[i], r),
                 FIELD_SIZE
             );
+            r = rn;
         }
 
-        return r[nInputs];
+        return r;
     }
 }
