@@ -19,7 +19,7 @@ interface IMiMC {
 }
 
 contract Bridge {
-    event DepositEvent(uint256, uint256, uint256);
+    event DepositEvent(uint256[2] pub, uint256 amount);
 
     IVerifier verifier;
     IMiMC mimc;
@@ -75,7 +75,7 @@ contract Bridge {
 
         setDepositor(l2pub);
 
-        emit DepositEvent(l2pub[0], l2pub[1], msg.value);
+        emit DepositEvent(l2pub, msg.value);
     }
 
     function withdraw(
