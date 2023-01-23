@@ -1,7 +1,7 @@
 let ks = require("./keystore")
 const buildMimc = require("circomlibjs").buildMimc7;
 
-test("aaa", async () => {
+test("mimcSign", async () => {
     const kstore = ks.buildKStore()
     let u = kstore.getUser("Bob")
     let mimc = await buildMimc()
