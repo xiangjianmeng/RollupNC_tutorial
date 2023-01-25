@@ -13,8 +13,11 @@
   },
   "dependencies": {
     "circomlibjs": "^0.1.7",
+    "commander": "^10.0.0",
     "level": "^8.0.0",
     "level-test": "^9.0.0",
+    "logplease": "^1.2.15",
+    "snarkjs": "^0.5.0",
     "web3": "^1.8.1"
   }
 }
