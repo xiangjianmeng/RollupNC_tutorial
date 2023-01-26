@@ -1,9 +1,9 @@
-const { tester } = require('circom');
-const { Worker, parentPort } = require('node:worker_threads');
+//const { tester } = require('circom');
+//const { Worker } = require('node:worker_threads');
 const buildEddsa = require("circomlibjs").buildEddsa;
 const buildMimc = require("circomlibjs").buildMimc7;
-
-exports.buildTxHandler = buildTxHandler;
+const bridgeProxy = require("./bridge").bridgeProxy;
+const submitProve = require("./zkp").submitProve;
 
 async function buildTxHandler(merkle) {
     let eddsa = await buildEddsa()
@@ -19,18 +19,15 @@ class TxHandler {
         this.mimc = mimc
 
         let path = require("path")
-        this.workder = new Worker(path.join(__dirname, "zkp.js"));
+        //this.workder = new Worker(path.join(__dirname, "zkp.js"));
     }
 
-    async handle(tx) {
+    async transfer(tx) {
         // check signature
         const hash = this.mimc.multiHash([tx.from[0], tx.from[1], tx.to[0], tx.to[1], tx.amount, tx.nonce]);
         if (!this.eddsa.verifyMiMC(hash, tx.sign, tx.from)) {
             return new Error("tx signature check failed")
         }
-
-        // calculate old merkle root
-        const old_root = await this.merkle.root()
 
         // check nonce and balance
         const from = await this.merkle.getAccount(tx.from)
@@ -41,6 +38,17 @@ class TxHandler {
         if (from.balance < tx.amount) {
             return new Error("insufficient balance")
         }
+
+        // check valid account
+        if (!await this.merkle.isAccountValid(tx.from)) {
+            return new Error("from account is invalid")
+        }
+        if (!await this.merkle.isAccountValid(tx.to)) {
+            return new Error("to account is invalid")
+        }
+
+        // calculate old merkle root
+        const old_root = await this.merkle.root()
 
         // get from merkle proof before tranfer.
         const fromMerkleProof = await this.merkle.getMerkleProof(tx.from)
@@ -76,10 +84,37 @@ class TxHandler {
             "receiver_proof_pos": toMerkleProof.pos, //[0]
         }
 
-        this.workder.postMessage(inputs)
+        //this.workder.postMessage(inputs)
+        await submitProve(inputs)
         return this.merkle.root()
     }
+
+    async withdraw(tx) {
+        // check signature
+        const hash = this.mimc.multiHash([tx.pub[0], tx.pub[1], tx.nonce]);
+        if (!this.eddsa.verifyMiMC(hash, tx.sign, tx.pub)) {
+            return new Error("tx signature check failed")
+        }
+
+        // check nonce
+        const acc = await this.merkle.getAccount(tx.pub)
+        if (acc.nonce != tx.nonce) {
+            return new Error("nonce is invalid")
+        }
+
+        // check valid account
+        if (!await this.merkle.isAccountValid(tx.pub)) {
+            return new Error("from account is invalid")
+        }
+
+        await this.merkle.setAccountEliminable(tx.pub)
+
+        bridgeProxy.cliamWithdraw(tx.pub)
+        this.merkle.getMerkleProof(tx.pub)
+    }
 }
+
+exports.buildTxHandler = buildTxHandler;
 
 /*
 async function test() {
@@ -114,7 +149,7 @@ async function test() {
         sign: sign,
     }
 
-    const new_root = await txHandler.handle(tx)
+    const new_root = await txHandler.transfer(tx)
     console.log("new root", new_root)
 }
 

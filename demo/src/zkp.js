@@ -3,7 +3,7 @@ const { parentPort } = require("node:worker_threads");
 const snarkjs = require("snarkjs");
 
 const Logger = require("logplease");
-const logger = Logger.create("snarkJS", { showTimestamp: false });
+const logger = Logger.create("zkp");
 Logger.setLogLevel("INFO");
 
 let path = require("path");
@@ -12,10 +12,12 @@ const zkey1_file = path.join(__dirname, "../data/single_tx_0001.zkey")
 
 
 
+/*
 parentPort.on("message", (zkp_inputs) => {
     const result = submitProve(zkp_inputs);
     parentPort.postMessage(result);
 });
+*/
 
 async function submitProve(inputs) {
     // generate witness
@@ -44,17 +46,12 @@ async function gen_groth16_proof(zkey1, witness) {
 
 async function gen_solidity_verifier_arguments(proof, publicSignals) {
     //return await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);
-    console.log("xxx", await snarkjs.groth16.exportSolidityCallData(proof, publicSignals))
     const input = publicSignals.map(n => { return p256$1(n) })
 
     const a = [p256$1(proof.pi_a[0]), p256$1(proof.pi_a[1])]
     const b = [[p256$1(proof.pi_b[0][1]), p256$1(proof.pi_b[0][0])], [p256$1(proof.pi_b[1][1]), p256$1(proof.pi_b[1][0])]]
     const c = [p256$1(proof.pi_c[0]), p256$1(proof.pi_c[1])]
 
-    console.log("a", a)
-    console.log("b", b)
-    console.log("c", c)
-    console.log("input", input)
     return { a, b, c, input }
 }
 
@@ -80,7 +77,6 @@ async function zkey_contribute(zkey0) {
 async function groth16_verify(zkey1, proof, pub) {
     const vKey = await snarkjs.zKey.exportVerificationKey(zkey1);
     const isValid = await snarkjs.groth16.verify(vKey, pub, proof, logger);
-    console.log("groth16 local verify: ", isValid)
 }
 
 
@@ -100,6 +96,10 @@ function p256$1(s) {
     nstr = `0x${nstr}`;
     return nstr;
 }
+
+
+exports.submitProve = submitProve;
+
 
 /*
 async function test() {

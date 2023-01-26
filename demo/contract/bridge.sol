@@ -26,6 +26,7 @@ contract Bridge {
 
     mapping(uint256 => bool) roots;
     mapping(bytes32 => address) depositMap;
+    mapping(bytes32 => bool) withdrawClaimed;
 
     constructor(address _verifier, address _mimc) {
         verifier = IVerifier(_verifier);
@@ -78,12 +79,22 @@ contract Bridge {
         emit DepositEvent(l2pub, msg.value);
     }
 
+    function cliamWithdraw(uint256[2] memory l2pub) public {
+        // TODO: require deployer
+
+        bytes32 hash = calcL2PubHash(l2pub);
+        withdrawClaimed[hash] = true;
+    }
+
     function withdraw(
         uint256[2] memory l2pub,
         uint256 amount,
         uint256[] memory proofs,
         bool[] memory isProofsRight
     ) public {
+        bytes32 pubhash = calcL2PubHash(l2pub);
+        require(withdrawClaimed[pubhash], "not claim withdraw");
+
         uint256[] memory nodeArr = new uint256[](3);
         nodeArr[0] = l2pub[0];
         nodeArr[1] = l2pub[1];
@@ -103,6 +114,8 @@ contract Bridge {
         }
 
         require(roots[root], "merkle is not verified");
+
+        delete withdrawClaimed[pubhash];
         address payable target = payable(getDepositor(l2pub));
         target.transfer(amount);
     }

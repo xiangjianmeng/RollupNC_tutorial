@@ -28,7 +28,7 @@ class Merkle {
         if (accCount >= 2) {
             throw new Error("merkle is full")
         }
-        if (await this.accountValid(pub)) {
+        if (await this.isAccountValid(pub)) {
             throw new Error(util.format("account has been exist: ", pub))
         }
 
@@ -97,12 +97,12 @@ class Merkle {
         await this.db.put(keyAccountCount, JSON.stringify(cnt))
     }
 
-    async accountValid(pub) {
+    async isAccountValid(pub) {
         if (!await this.hasAccount(pub)) {
             return false
         }
         const acc = await this.getAccount(pub)
-        return acc.status = AccountStatusValid
+        return acc.status == AccountStatusValid
     }
 
     async hasAccount(pub) {
