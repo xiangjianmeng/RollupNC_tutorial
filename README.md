@@ -116,3 +116,9 @@ node tools/l2_withdraw.js --name Bob --nonce 1
 上一步的 withdraw 只是在 L2 网络中将账户信息链定，并将 withdraw 信息提交到 bridge 合约中；真正要在 L1 中取回相应的币，需要用户再手动调用一下 bridge 合约的 `withdraw` 方法，所需的参数就是上一步中程序返回的数据。
 
 调用成功后，就能看到账户余额相应的变此。
+
+
+# TODO
+- [ ] 签名、计算 merkle root 时， nonce 没有参与
+- [ ] deposit 的值比较大(如 1okt, 1000000000000000000)，circom 验证失败
+- [ ] log 不起作用
