@@ -1,4 +1,4 @@
-const bridge = require("./bridge")
+const bridgeProxy = require("./bridge").bridgeProxy;
 const { parentPort } = require("node:worker_threads");
 const snarkjs = require("snarkjs");
 
@@ -25,11 +25,11 @@ async function submitProve(inputs) {
 
     const { proof, publicSignals } = await gen_groth16_proof(zkey1_file, witness)
 
-    //await groth16_verify(zkey1_file, proof, publicSignals)
+    await groth16_verify(zkey1_file, proof, publicSignals)
 
     const { a, b, c, input } = await gen_solidity_verifier_arguments(proof, publicSignals)
 
-    return await bridge.commitProof(a, b, c, input)
+    return await bridgeProxy.commitProof(a, b, c, input)
 }
 
 async function gen_witness(inputs) {

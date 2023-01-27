@@ -1,7 +1,11 @@
 const Logger = require("logplease");
 const logger = Logger.create("bridge");
 
-const bridgeAddress = "0x280f8A48391cA191c17478aD141ea12F113fb65f"
+const testPwd = "123456"
+const testAddress = "0x4C12e733e58819A1d3520f1E7aDCc614Ca20De64"
+const testPrvKey = "b7700998b973a2cae0cb8e8a328171399c043e57289735aca5f2419bd622297a"
+
+const bridgeAddress = "0xe3C9cb3E962d329fB41eeCF2c8EafE971412DE06"
 const abi = [
     {
         "inputs": [
@@ -46,7 +50,7 @@ const abi = [
                 "type": "uint256[2]"
             }
         ],
-        "name": "cliamWithdraw",
+        "name": "claimWithdraw",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -106,19 +110,24 @@ const abi = [
                 "type": "uint256[2]"
             },
             {
+                "internalType": "uint256[2]",
+                "name": "l2pubForProof",
+                "type": "uint256[2]"
+            },
+            {
                 "internalType": "uint256",
                 "name": "amount",
                 "type": "uint256"
             },
             {
                 "internalType": "uint256[]",
-                "name": "proofs",
+                "name": "proof",
                 "type": "uint256[]"
             },
             {
-                "internalType": "bool[]",
-                "name": "isProofsRight",
-                "type": "bool[]"
+                "internalType": "uint256[]",
+                "name": "proofPos",
+                "type": "uint256[]"
             }
         ],
         "name": "withdraw",
@@ -137,12 +146,26 @@ function buildBridge() {
 class BridgeProxy {
     constructor(bridge) {
         this.bridge = bridge
+        this.personal = null
     }
 
     async commitProof(a, b, c, input) {
+        if (this.personal == null) {
+            var Personal = require('web3-eth-personal');
+            this.personal = new Personal('ws://localhost:8546');
+            await this.personal.importRawKey(testPrvKey, testPwd)
+        }
+
         logger.debug("commit zk proof", a, b, c, input)
         try {
-            return await this.bridge.methods.commitProof(a, b, c, input).call()
+            if (await this.bridge.methods.commitProof(a, b, c, input).call()) {
+                await this.personal.unlockAccount(testAddress, testPwd, 10000)
+                const res = await this.bridge.methods.commitProof(a, b, c, input).send({ from: testAddress })
+                logger.debug("contract verify success", res)
+                return true
+            }
+            logger.debug("contract verify failed")
+            return false
         } catch (e) {
             console.log(e)
             return false
@@ -150,8 +173,15 @@ class BridgeProxy {
     }
 
     async claimWithdraw(pub) {
+        if (this.personal == null) {
+            var Personal = require('web3-eth-personal');
+            this.personal = new Personal('ws://localhost:8546');
+            await this.personal.importRawKey(testPrvKey, testPwd)
+        }
+
         logger.debug("claim withdraw", pub)
-        await this.bridge.methods.cliamWithdraw(pub).call()
+        await this.personal.unlockAccount(testAddress, testPwd, 10000)
+        await this.bridge.methods.claimWithdraw(pub).send({ from: testAddress })
     }
 }
 

@@ -1,4 +1,5 @@
-//const { tester } = require('circom');
+const util = require("util");
+
 //const { Worker } = require('node:worker_threads');
 const buildEddsa = require("circomlibjs").buildEddsa;
 const buildMimc = require("circomlibjs").buildMimc7;
@@ -24,27 +25,28 @@ class TxHandler {
 
     async transfer(tx) {
         // check signature
-        const hash = this.mimc.multiHash([tx.from[0], tx.from[1], tx.to[0], tx.to[1], tx.amount, tx.nonce]);
+        //const hash = this.mimc.multiHash([tx.from[0], tx.from[1], tx.to[0], tx.to[1], tx.amount, tx.nonce]);
+        const hash = this.mimc.multiHash([tx.from[0], tx.from[1], tx.to[0], tx.to[1], tx.amount]);
         if (!this.eddsa.verifyMiMC(hash, tx.sign, tx.from)) {
-            return new Error("tx signature check failed")
+            return { success: false, msg: "tx signature check failed" }
         }
 
         // check nonce and balance
         const from = await this.merkle.getAccount(tx.from)
         const to = await this.merkle.getAccount(tx.to)
         if (from.nonce != tx.nonce) {
-            return new Error("nonce is invalid")
+            return { success: false, msg: "nonce is invalid" }
         }
         if (from.balance < tx.amount) {
-            return new Error("insufficient balance")
+            return { success: false, msg: "insufficient balance" }
         }
 
         // check valid account
         if (!await this.merkle.isAccountValid(tx.from)) {
-            return new Error("from account is invalid")
+            return { success: false, msg: "from account is invalid" }
         }
         if (!await this.merkle.isAccountValid(tx.to)) {
-            return new Error("to account is invalid")
+            return { success: false, msg: "to account is invalid" }
         }
 
         // calculate old merkle root
@@ -85,32 +87,37 @@ class TxHandler {
         }
 
         //this.workder.postMessage(inputs)
-        await submitProve(inputs)
-        return this.merkle.root()
+        const res = await submitProve(inputs)
+        if (res != true) {
+            return { success: false, msg: "commit zk proof failed" }
+        }
+        return {
+            success: true, msg: util.format("merkle root: 0x%s", Buffer.from(await this.merkle.root()).toString("hex"))
+        }
     }
 
     async withdraw(tx) {
         // check signature
         const hash = this.mimc.multiHash([tx.pub[0], tx.pub[1], tx.nonce]);
         if (!this.eddsa.verifyMiMC(hash, tx.sign, tx.pub)) {
-            return new Error("tx signature check failed")
+            return { success: false, msg: "tx signature check failed" }
         }
 
         // check nonce
         const acc = await this.merkle.getAccount(tx.pub)
         if (acc.nonce != tx.nonce) {
-            return new Error("nonce is invalid")
+            return { success: false, msg: "nonce is invalid" }
         }
 
         // check valid account
         if (!await this.merkle.isAccountValid(tx.pub)) {
-            return new Error("from account is invalid")
+            return { success: false, msg: "withdraw account is invalid" }
         }
 
         await this.merkle.setAccountEliminable(tx.pub)
 
-        bridgeProxy.cliamWithdraw(tx.pub)
-        this.merkle.getMerkleProof(tx.pub)
+        bridgeProxy.claimWithdraw(tx.pub)
+        return { success: true, balance: acc.balance, merkleProof: await this.merkle.getMerkleProof(tx.pub) }
     }
 }
 

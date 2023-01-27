@@ -79,7 +79,7 @@ contract Bridge {
         emit DepositEvent(l2pub, msg.value);
     }
 
-    function cliamWithdraw(uint256[2] memory l2pub) public {
+    function claimWithdraw(uint256[2] memory l2pub) public {
         // TODO: require deployer
 
         bytes32 hash = calcL2PubHash(l2pub);
@@ -88,27 +88,28 @@ contract Bridge {
 
     function withdraw(
         uint256[2] memory l2pub,
+        uint256[2] memory l2pubForProof,
         uint256 amount,
-        uint256[] memory proofs,
-        bool[] memory isProofsRight
+        uint256[] memory proof,
+        uint256[] memory proofPos
     ) public {
         bytes32 pubhash = calcL2PubHash(l2pub);
         require(withdrawClaimed[pubhash], "not claim withdraw");
 
         uint256[] memory nodeArr = new uint256[](3);
-        nodeArr[0] = l2pub[0];
-        nodeArr[1] = l2pub[1];
+        nodeArr[0] = l2pubForProof[0];
+        nodeArr[1] = l2pubForProof[1];
         nodeArr[2] = amount;
         uint256 root = mimc.multiHash(nodeArr);
 
         uint256[] memory hashPair = new uint256[](2);
-        for (uint256 i = 0; i < proofs.length; i++) {
-            if (isProofsRight[i]) {
-                hashPair[0] = root;
-                hashPair[1] = proofs[i];
-            } else {
-                hashPair[0] = proofs[i];
+        for (uint256 i = 0; i < proof.length; i++) {
+            if (0 == proofPos[i]) {
+                hashPair[0] = proof[i];
                 hashPair[1] = root;
+            } else {
+                hashPair[0] = root;
+                hashPair[1] = proof[i];
             }
             root = mimc.multiHash(hashPair);
         }

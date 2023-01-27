@@ -31,8 +31,7 @@ async function main() {
 
     let subscribe = listenDepositEvent(merkle)
 
-    let server = buildHttpServer(merkle)
-    server.run()
+    let server = await buildHttpServer(merkle)
 }
 
 main()

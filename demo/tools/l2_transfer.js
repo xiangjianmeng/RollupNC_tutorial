@@ -26,7 +26,8 @@ async function main() {
 
     const from = fromUser.pub()
     const to = toUser.pub()
-    const sign = await fromUser.mimcSign([from[0], from[1], to[0], to[1], amount, nonce])
+    //const sign = await fromUser.mimcSign([from[0], from[1], to[0], to[1], amount, nonce])
+    const sign = await fromUser.mimcSign([from[0], from[1], to[0], to[1], amount])
 
     const tx = {
         from: from,
@@ -36,7 +37,6 @@ async function main() {
         sign: sign,
     }
 
-    console.log(sign)
     const request = require('request');
 
     const transfer_opts = {
@@ -61,7 +61,7 @@ async function main() {
 function to64hexString(s) {
     let nstr = Buffer.from(s).toString("hex")
     while (nstr.length < 64) nstr = "0" + nstr;
-    return `0x${nstr}`
+    return nstr
 }
 
 main()

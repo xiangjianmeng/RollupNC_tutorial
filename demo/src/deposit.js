@@ -3,7 +3,7 @@ var util = require('util');
 const Logger = require("logplease");
 const logger = Logger.create("deposit");
 
-const contractAddress = '0x5Cb5e87f4edb93ecA137De6F8a0905D7165D74Ee';
+const contractAddress = '0xe3C9cb3E962d329fB41eeCF2c8EafE971412DE06';
 const topics = ['0x39D3D971545F86DE37C2D290C969434D2CD0DD13298BB45F424EC4B7D4373AD0'];
 const inputs = [
     {
@@ -15,7 +15,7 @@ const inputs = [
     {
         "indexed": false,
         "internalType": "uint256",
-        "name": "amount", // * 0.00001okt
+        "name": "amount",
         "type": "uint256"
     }
 ];
@@ -34,18 +34,15 @@ function listenDepositEvent(merkle) {
             return
         }
 
-        const msg = util.format("get a deposit event: %o", inputs)
-        console.log(msg)
-        logger.debug(msg)
+        logger.debug(util.format("get a deposit event: %o", log))
         const depositLog = web3.eth.abi.decodeLog(inputs, log['data'], log['topics'])
+        const pub = [
+            Buffer.from(BigInt(depositLog.pub[0]).toString(16), 'hex'),
+            Buffer.from(BigInt(depositLog.pub[1]).toString(16), 'hex')
+        ]
 
-        const pub0 = Buffer.from(depositLog.pub[0].toString().padStart(64, '0'), "hex")
-        const pub1 = Buffer.from(depositLog.pub[1].toString().padStart(64, '0'), "hex")
-
-        const msg2 = util.format("deposit info: pub[%s, %s]. amount:%d", pub0, pub1, depositLog.amount)
-        console.log(msg)
-        logger.debug(msg)
-        merkle.addAccount([pub0, pub1], parseInt(depositLog.amount))
+        logger.debug(util.format("deposit info: pub[0x%s, 0x%s]. amount:%d", pub[0].toString('hex'), pub[1].toString('hex'), depositLog.amount))
+        merkle.addAccount(pub, parseInt(depositLog.amount))
     }
     )
 }

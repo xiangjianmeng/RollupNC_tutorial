@@ -40,8 +40,6 @@ class Merkle {
         var hashs = []
         for await (const [key, value] of this.db.iterator({ gt: accountKeyPrefix })) {
             const acc = this.unmarshalAccount(value)
-            const pub = [Uint8Array.from(acc.pub[0]), Uint8Array.from(acc.pub[1])]
-            acc.pub = pub
             hashs.push(await this.accountHash(acc))
         }
 
@@ -57,12 +55,12 @@ class Merkle {
         if (accounts[0].pub[0].toString() == pub[0].toString() && accounts[0].pub[1].toString() == pub[1].toString()) {
             return {
                 proof: [await this.accountHash(accounts[1])],
-                pos: [0],
+                pos: [1],
             }
         } if (accounts[1].pub[0].toString() == pub[0].toString() && accounts[1].pub[1].toString() == pub[1].toString()) {
             return {
                 proof: [await this.accountHash(accounts[0])],
-                pos: [1],
+                pos: [0],
             }
         } else {
             throw new Error("unknown pub key for merkle proof")
@@ -70,7 +68,8 @@ class Merkle {
     }
 
     async accountHash(account) {
-        return await this.hasher.hashOf([account.pub[0], account.pub[1], account.balance, account.nonce])
+        //return await this.hasher.hashOf([account.pub[0], account.pub[1], account.balance, account.nonce])
+        return await this.hasher.hashOf([account.pub[0], account.pub[1], account.balance])
     }
 
     async setAccountEliminable(pub) {
@@ -130,7 +129,7 @@ class Merkle {
 
     marshalAccount(pub, balance, nonce, status) {
         const acc = {
-            pub: [Array.from(pub[0]), Array.from(pub[1])],
+            pub: [Buffer.from(pub[0]), Buffer.from(pub[1])],
             balance: balance,
             nonce: nonce,
             status: status,
@@ -140,7 +139,7 @@ class Merkle {
 
     unmarshalAccount(data) {
         var acc = JSON.parse(data)
-        const pub = [Uint8Array.from(acc.pub[0]), Uint8Array.from(acc.pub[1])]
+        const pub = [Buffer.from(acc.pub[0]), Buffer.from(acc.pub[1])]
         acc.pub = pub
         return acc
     }
