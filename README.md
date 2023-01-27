@@ -8,6 +8,13 @@
 
 # 重新生成 zk 数据
 > 也可以省略这一步，直接进入下一步「部署」。
+
+1. 全局安装 snarkjs:
+```sh
+npm i -g snarkjs
+```
+
+2. 运行以下命令:
 ```sh
 cd circom
 ./single_tx_prepare.sh
