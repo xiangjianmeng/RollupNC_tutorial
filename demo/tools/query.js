@@ -26,7 +26,7 @@ async function query_keys(name) {
     const user = await getUserByName(name)
     const pub = user.pub()
 
-    console.log("public key:", [to64hexString(pub[0]), to64hexString(pub[1])])
+    console.log("public key:", ['0x' + to64hexString(pub[0]), '0x' + to64hexString(pub[1])])
 }
 
 async function query_account(name) {

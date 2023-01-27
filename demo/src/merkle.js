@@ -11,7 +11,6 @@ async function buildMerkle(db) {
     return new Merkle(db, new Hasher(await buildMimc()))
 }
 
-const keyAccountCount = "accountCount"
 const accountKeyPrefix = "zacc_"
 
 const AccountStatusValid = "accountValid"
@@ -24,7 +23,7 @@ class Merkle {
     }
 
     async addAccount(pub, balance) {
-        const accCount = await this.getAccountCount()
+        const accCount = await this.getValidAccountCount()
         if (accCount >= 2) {
             throw new Error("merkle is full")
         }
@@ -33,7 +32,6 @@ class Merkle {
         }
 
         await this.setAccount(pub, balance, 0, AccountStatusValid)
-        await this.setAccountCount(accCount + 1)
     }
 
     async root() {
@@ -82,18 +80,19 @@ class Merkle {
         return await this.hasher.hashOf([acc.pub[0], acc.pub[1], acc.balance, acc.nonce])
     }
 
-    async getAccountCount() {
+    async getValidAccountCount() {
         try {
-            const data = await this.db.get(keyAccountCount)
-            const cnt = JSON.parse(data)
-            return cnt
+            var validCount = 0
+            for await (const [key, value] of this.db.iterator({ gt: accountKeyPrefix })) {
+                const acc = this.unmarshalAccount(value)
+                if (acc.status == AccountStatusValid) {
+                    validCount += 1
+                }
+            }
+            return validCount
         } catch (e) {
             return 0
         }
-    }
-
-    async setAccountCount(cnt) {
-        await this.db.put(keyAccountCount, JSON.stringify(cnt))
     }
 
     async isAccountValid(pub) {
