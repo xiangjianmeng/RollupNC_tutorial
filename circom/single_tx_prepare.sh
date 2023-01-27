@@ -37,9 +37,9 @@ snarkjs zkey contribute ${NAME}_0000.zkey ${NAME}_0001.zkey --name="1st Contribu
 snarkjs zkey export solidityverifier ${NAME}_0001.zkey verifier.sol
 
 # we only need wasm, verifier.sol and zkey
-mv ${NAME}.wasm ../data/${NAME}.wasm
-mv verifier.sol ../contract/${NAME}_verifier.sol
-mv ${NAME}_0001.zkey ../data/${NAME}_0001.zkey
+mv ${NAME}.wasm ../../data/${NAME}.wasm
+mv verifier.sol ../../contract/${NAME}_verifier.sol
+mv ${NAME}_0001.zkey ../../data/${NAME}_0001.zkey
 
 # remove the previously generated files
 cd ..

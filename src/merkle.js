@@ -1,4 +1,3 @@
-const { tester } = require('circom');
 const { stat } = require('fs');
 const { Level } = require('level')
 const buildMimc = require("circomlibjs").buildMimc7;
