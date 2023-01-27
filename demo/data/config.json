@@ -1,0 +1,9 @@
+{
+    "bridgeAddress": "0xe3C9cb3E962d329fB41eeCF2c8EafE971412DE06",
+    "depositEventTopic": [
+        "0x39D3D971545F86DE37C2D290C969434D2CD0DD13298BB45F424EC4B7D4373AD0"
+    ],
+    "testPwd": "123456",
+    "testAddress": "0x4C12e733e58819A1d3520f1E7aDCc614Ca20De64",
+    "testPrvKey": "b7700998b973a2cae0cb8e8a328171399c043e57289735aca5f2419bd622297a"
+}

@@ -1,146 +1,15 @@
 const Logger = require("logplease");
 const logger = Logger.create("bridge");
 
-const testPwd = "123456"
-const testAddress = "0x4C12e733e58819A1d3520f1E7aDCc614Ca20De64"
-const testPrvKey = "b7700998b973a2cae0cb8e8a328171399c043e57289735aca5f2419bd622297a"
+const cfgMod = require("./config");
+const config = cfgMod.config;
+const bridgeABI = cfgMod.bridgeABI;
 
-const bridgeAddress = "0xe3C9cb3E962d329fB41eeCF2c8EafE971412DE06"
-const abi = [
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_verifier",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_mimc",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "uint256[2]",
-                "name": "pub",
-                "type": "uint256[2]"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "DepositEvent",
-        "type": "event"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256[2]",
-                "name": "l2pub",
-                "type": "uint256[2]"
-            }
-        ],
-        "name": "claimWithdraw",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256[2]",
-                "name": "a",
-                "type": "uint256[2]"
-            },
-            {
-                "internalType": "uint256[2][2]",
-                "name": "b",
-                "type": "uint256[2][2]"
-            },
-            {
-                "internalType": "uint256[2]",
-                "name": "c",
-                "type": "uint256[2]"
-            },
-            {
-                "internalType": "uint256[1]",
-                "name": "input",
-                "type": "uint256[1]"
-            }
-        ],
-        "name": "commitProof",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "r",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256[2]",
-                "name": "l2pub",
-                "type": "uint256[2]"
-            }
-        ],
-        "name": "deposit",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256[2]",
-                "name": "l2pub",
-                "type": "uint256[2]"
-            },
-            {
-                "internalType": "uint256[2]",
-                "name": "l2pubForProof",
-                "type": "uint256[2]"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "proof",
-                "type": "uint256[]"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "proofPos",
-                "type": "uint256[]"
-            }
-        ],
-        "name": "withdraw",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
-]
 
 function buildBridge() {
     var Contract = require('web3-eth-contract');
     Contract.setProvider('ws://localhost:8546');
-    return new BridgeProxy(new Contract(abi, bridgeAddress))
+    return new BridgeProxy(new Contract(bridgeABI, config.bridgeAddress))
 }
 
 class BridgeProxy {
@@ -153,14 +22,14 @@ class BridgeProxy {
         if (this.personal == null) {
             var Personal = require('web3-eth-personal');
             this.personal = new Personal('ws://localhost:8546');
-            await this.personal.importRawKey(testPrvKey, testPwd)
+            await this.personal.importRawKey(config.testPrvKey, config.testPwd)
         }
 
         logger.debug("commit zk proof", a, b, c, input)
         try {
             if (await this.bridge.methods.commitProof(a, b, c, input).call()) {
-                await this.personal.unlockAccount(testAddress, testPwd, 10000)
-                const res = await this.bridge.methods.commitProof(a, b, c, input).send({ from: testAddress })
+                await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
+                const res = await this.bridge.methods.commitProof(a, b, c, input).send({ from: config.testAddress })
                 logger.debug("contract verify success", res)
                 return true
             }
@@ -176,12 +45,12 @@ class BridgeProxy {
         if (this.personal == null) {
             var Personal = require('web3-eth-personal');
             this.personal = new Personal('ws://localhost:8546');
-            await this.personal.importRawKey(testPrvKey, testPwd)
+            await this.personal.importRawKey(config.testPrvKey, config.testPwd)
         }
 
         logger.debug("claim withdraw", pub)
-        await this.personal.unlockAccount(testAddress, testPwd, 10000)
-        await this.bridge.methods.claimWithdraw(pub).send({ from: testAddress })
+        await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
+        await this.bridge.methods.claimWithdraw(pub).send({ from: config.testAddress })
     }
 }
 

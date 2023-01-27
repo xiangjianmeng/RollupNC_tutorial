@@ -3,8 +3,8 @@ var util = require('util');
 const Logger = require("logplease");
 const logger = Logger.create("deposit");
 
-const contractAddress = '0xe3C9cb3E962d329fB41eeCF2c8EafE971412DE06';
-const topics = ['0x39D3D971545F86DE37C2D290C969434D2CD0DD13298BB45F424EC4B7D4373AD0'];
+const cfgMod = require("./config");
+const config = cfgMod.config;
 const inputs = [
     {
         "indexed": false,
@@ -26,8 +26,8 @@ function listenDepositEvent(merkle) {
 
     // DepositEvent log
     return web3.eth.subscribe("logs", {
-        address: contractAddress,
-        topics: topics,
+        address: config.bridgeAddress,
+        topics: config.depositEventTopic,
     }, function (error, log) {
         if (error) {
             console.log("DepositEvent error", error);
