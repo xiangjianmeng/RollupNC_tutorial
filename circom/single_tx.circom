@@ -105,4 +105,4 @@ template ProcessTx(k){
     new_accounts_root <== computed_final_root.out;
 }
 
-component main = ProcessTx(1);
+component main {public[accounts_root]} = ProcessTx(1);

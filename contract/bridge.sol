@@ -7,7 +7,7 @@ interface IVerifier {
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c,
-        uint256[1] memory input
+        uint256[2] memory input
     ) external view returns (bool r);
 }
 
@@ -25,6 +25,7 @@ contract Bridge {
     IMiMC mimc;
 
     mapping(uint256 => bool) roots;
+    uint256 prevRoot;
     mapping(bytes32 => address) depositMap;
     mapping(bytes32 => bool) withdrawClaimed;
 
@@ -57,11 +58,14 @@ contract Bridge {
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c,
-        uint256[1] memory input
+        uint256[2] memory input
     ) public returns (bool r) {
         r = false;
+        // TODO: require prevRoot == input[1]
+        //require(prevRoot == input[1], "old merkle root of proof is invalid");
 
         if (verifier.verifyProof(a, b, c, input)) {
+            prevRoot = input[0];
             roots[input[0]] = true;
             r = true;
         } else {
