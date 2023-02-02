@@ -3,7 +3,12 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "_verifier",
+                "name": "_groth16_verifier",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_plonk_verifier",
                 "type": "address"
             },
             {
@@ -70,7 +75,31 @@
                 "type": "uint256[2]"
             }
         ],
-        "name": "commitProof",
+        "name": "commitGroth16Proof",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "r",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes",
+                "name": "proof",
+                "type": "bytes"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "pubSignals",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "commitPlonkProof",
         "outputs": [
             {
                 "internalType": "bool",

@@ -32,9 +32,10 @@ cd dev
 
 ## 2. 部署合约
 在运行的 okc 私链上部署 [contract](./contract) 目录下的合约，部署顺序为：
-1. single_tx_verifier.sol
-2. mimc.sol
-3. 使用 single_tx_verifier 和 mimc 的地址，部署 bridge.sol
+1. groth16_single_tx_verifier.sol
+2. plonk_single_tx_verifier.sol
+3. mimc.sol
+4. 使用 groth16_single_tx_verifier 、plonk_single_tx_verifier 和 mimc 的地址，部署 bridge.sol
 
 ## 3. 更新配置数据
 1. 使用新部署的 bridge 合约地址，更新 [./data/config.json](./data/config.json) 中的 `bridgeAddress` 字段 和 `depositEventTopic` 字段（`depositEventTopic`为 bridge 合约是 `DepositEvent` 事件的 topic）
@@ -47,6 +48,11 @@ cd dev
 ```sh
 node ./index.js -v
 ```
+或使用 plonk 证明：
+```sh
+node ./index.js -p -v
+```
+
 
 ## 2. deposit
 demo 只支持两个用户，且只有两个用户都完成 deposit 时，所有功能才能正常运行，所以首先要确保两个用户都完成 deposit 。

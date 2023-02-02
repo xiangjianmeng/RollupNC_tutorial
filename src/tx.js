@@ -6,18 +6,19 @@ const buildMimc = require("circomlibjs").buildMimc7;
 const bridgeProxy = require("./bridge").bridgeProxy;
 const submitProve = require("./zkp").submitProve;
 
-async function buildTxHandler(merkle) {
+async function buildTxHandler(merkle, zkProtocol) {
     let eddsa = await buildEddsa()
     let mimc = await buildMimc()
 
-    return new TxHandler(merkle, eddsa, mimc)
+    return new TxHandler(merkle, eddsa, mimc, zkProtocol)
 }
 
 class TxHandler {
-    constructor(merkle, eddsa, mimc) {
+    constructor(merkle, eddsa, mimc, zkProtocol) {
         this.merkle = merkle
         this.eddsa = eddsa
         this.mimc = mimc
+        this.zkProtocol = zkProtocol
 
         let path = require("path")
         //this.workder = new Worker(path.join(__dirname, "zkp.js"));
@@ -87,7 +88,7 @@ class TxHandler {
         }
 
         //this.workder.postMessage(inputs)
-        const res = await submitProve(inputs)
+        const res = await submitProve(inputs, this.zkProtocol)
         if (res != true) {
             return { success: false, msg: "commit zk proof failed" }
         }

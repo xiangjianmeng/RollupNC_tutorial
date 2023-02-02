@@ -8,7 +8,6 @@ Logger.setLogLevel("INFO");
 
 let path = require("path");
 const wasm_file = path.join(__dirname, "../data/single_tx.wasm")
-const zkey1_file = path.join(__dirname, "../data/single_tx_0001.zkey")
 
 
 
@@ -19,17 +18,44 @@ parentPort.on("message", (zkp_inputs) => {
 });
 */
 
-async function submitProve(inputs) {
+async function submitProve(inputs, zkProtocol) {
+    const zkey1_file = path.join(__dirname, `../data/${zkProtocol}_single_tx_0001.zkey`)
     // generate witness
     const witness = await gen_witness(inputs)
 
-    const { proof, publicSignals } = await gen_groth16_proof(zkey1_file, witness)
+    if (zkProtocol == "groth16") {
+        return submitGroth16Proof(witness, zkey1_file)
+    } else if (zkProtocol == "plonk") {
+        return submitPlonkProof(witness, zkey1_file)
+    } else {
+        let util = require("util")
+        throw util.format("unsupport zk protocol %s", zkProtocol)
+    }
 
+}
+
+async function submitGroth16Proof(witness, zkey1_file) {
+    const { proof, publicSignals } = await gen_groth16_proof(zkey1_file, witness)
     await groth16_verify(zkey1_file, proof, publicSignals)
 
-    const { a, b, c, input } = await gen_solidity_verifier_arguments(proof, publicSignals)
+    const { a, b, c, input } = await gen_groth16_solidity_verifier_arguments(proof, publicSignals)
+    return await bridgeProxy.commitGroth16Proof(a, b, c, input)
+}
 
-    return await bridgeProxy.commitProof(a, b, c, input)
+async function submitPlonkProof(witness, zkey1_file) {
+    const { proof, publicSignals } = await gen_plonk_proof(zkey1_file, witness)
+    await plonk_verify(zkey1_file, proof, publicSignals)
+
+    const args = await gen_plonk_solidity_verifier_arguments(proof, publicSignals)
+    const splitIndex = args.indexOf(",")
+    const proofArr = Buffer.from(args.substring(2, splitIndex), "hex")
+
+    const regexp = /0x([0-9a-fA-F]+)/g
+    const rest = args.substring(splitIndex + 1)
+    const reResult = [...rest.matchAll(regexp)]//.map(x => Buffer.from(x, "hex"))
+    const public = [Buffer.from(reResult[0][1], "hex"), Buffer.from(reResult[1][1], "hex")]
+
+    return await bridgeProxy.commitPlonkProof(proofArr, public)
 }
 
 async function gen_witness(inputs) {
@@ -44,7 +70,11 @@ async function gen_groth16_proof(zkey1, witness) {
     return await snarkjs.groth16.prove(zkey1, witness, logger)
 }
 
-async function gen_solidity_verifier_arguments(proof, publicSignals) {
+async function gen_plonk_proof(zkey1, witness) {
+    return await snarkjs.plonk.prove(zkey1, witness, logger)
+}
+
+async function gen_groth16_solidity_verifier_arguments(proof, publicSignals) {
     //return await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);
     const input = publicSignals.map(n => { return p256$1(n) })
 
@@ -53,6 +83,10 @@ async function gen_solidity_verifier_arguments(proof, publicSignals) {
     const c = [p256$1(proof.pi_c[0]), p256$1(proof.pi_c[1])]
 
     return { a, b, c, input }
+}
+
+async function gen_plonk_solidity_verifier_arguments(proof, publicSignals) {
+    return await snarkjs.plonk.exportSolidityCallData(proof, publicSignals)
 }
 
 async function prepare_ptau() {
@@ -77,6 +111,11 @@ async function zkey_contribute(zkey0) {
 async function groth16_verify(zkey1, proof, pub) {
     const vKey = await snarkjs.zKey.exportVerificationKey(zkey1);
     const isValid = await snarkjs.groth16.verify(vKey, pub, proof, logger);
+}
+
+async function plonk_verify(zkey1, proof, pub) {
+    const vKey = await snarkjs.zKey.exportVerificationKey(zkey1);
+    snarkjs.plonk.verify(vKey, pub, proof, logger)
 }
 
 

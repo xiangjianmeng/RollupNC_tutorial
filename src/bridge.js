@@ -18,18 +18,41 @@ class BridgeProxy {
         this.personal = null
     }
 
-    async commitProof(a, b, c, input) {
+    async commitGroth16Proof(a, b, c, input) {
         if (this.personal == null) {
             var Personal = require('web3-eth-personal');
             this.personal = new Personal('ws://localhost:8546');
             await this.personal.importRawKey(config.testPrvKey, config.testPwd)
         }
 
-        logger.debug("commit zk proof", a, b, c, input)
+        logger.debug("commit groth16 proof", a, b, c, input)
         try {
-            if (await this.bridge.methods.commitProof(a, b, c, input).call()) {
+            if (await this.bridge.methods.commitGroth16Proof(a, b, c, input).call()) {
                 await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
-                const res = await this.bridge.methods.commitProof(a, b, c, input).send({ from: config.testAddress })
+                const res = await this.bridge.methods.commitGroth16Proof(a, b, c, input).send({ from: config.testAddress })
+                logger.debug("contract verify success", res)
+                return true
+            }
+            logger.debug("contract verify failed")
+            return false
+        } catch (e) {
+            console.log(e)
+            return false
+        }
+    }
+
+    async commitPlonkProof(proof, input) {
+        if (this.personal == null) {
+            var Personal = require('web3-eth-personal');
+            this.personal = new Personal('ws://localhost:8546');
+            await this.personal.importRawKey(config.testPrvKey, config.testPwd)
+        }
+
+        logger.debug("commit plonk proof", proof, input)
+        try {
+            if (await this.bridge.methods.commitPlonkProof(proof, input).call()) {
+                await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
+                const res = await this.bridge.methods.commitPlonkProof(proof, input).send({ from: config.testAddress })
                 logger.debug("contract verify success", res)
                 return true
             }

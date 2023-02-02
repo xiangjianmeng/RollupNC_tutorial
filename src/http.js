@@ -4,10 +4,10 @@ const logger = Logger.create("http");
 const express = require('express')
 const buildEddsa = require("circomlibjs").buildEddsa;
 
-async function buildHttpServer(merkle) {
+async function buildHttpServer(merkle, zkProtocol) {
     let txmod = require("./tx")
     let eddsa = await buildEddsa()
-    const txHandler = await txmod.buildTxHandler(merkle)
+    const txHandler = await txmod.buildTxHandler(merkle, zkProtocol)
 
     app = express()
     app.use(express.json()) // for parsing application/json

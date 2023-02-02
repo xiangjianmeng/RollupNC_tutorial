@@ -2,13 +2,20 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-interface IVerifier {
+interface IGroth16Verifier {
     function verifyProof(
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c,
         uint256[2] memory input
     ) external view returns (bool r);
+}
+
+interface IPlonkVerifier {
+    function verifyProof(bytes memory proof, uint256[] memory pubSignals)
+        external
+        view
+        returns (bool r);
 }
 
 interface IMiMC {
@@ -21,7 +28,8 @@ interface IMiMC {
 contract Bridge {
     event DepositEvent(uint256[2] pub, uint256 amount);
 
-    IVerifier verifier;
+    IGroth16Verifier groth16_verifier;
+    IPlonkVerifier plonk_verifier;
     IMiMC mimc;
 
     mapping(uint256 => bool) roots;
@@ -29,8 +37,13 @@ contract Bridge {
     mapping(bytes32 => address) depositMap;
     mapping(bytes32 => bool) withdrawClaimed;
 
-    constructor(address _verifier, address _mimc) {
-        verifier = IVerifier(_verifier);
+    constructor(
+        address _groth16_verifier,
+        address _plonk_verifier,
+        address _mimc
+    ) {
+        groth16_verifier = IGroth16Verifier(_groth16_verifier);
+        plonk_verifier = IPlonkVerifier(_plonk_verifier);
         mimc = IMiMC(_mimc);
     }
 
@@ -54,24 +67,37 @@ contract Bridge {
         depositMap[calcL2PubHash(l2pub)] = msg.sender;
     }
 
-    function commitProof(
+    function commitRoot(uint256 oldRoot, uint256 newRoot) private {
+        // TODO: require prevRoot == oldRoot
+        //require(prevRoot == oldRoot, "old merkle root of proof is invalid");
+
+        prevRoot = newRoot;
+        roots[newRoot] = true;
+    }
+
+    function commitGroth16Proof(
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c,
         uint256[2] memory input
     ) public returns (bool r) {
         r = false;
-        // TODO: require prevRoot == input[1]
-        //require(prevRoot == input[1], "old merkle root of proof is invalid");
-
-        if (verifier.verifyProof(a, b, c, input)) {
-            prevRoot = input[0];
-            roots[input[0]] = true;
+        if (groth16_verifier.verifyProof(a, b, c, input)) {
+            commitRoot(input[1], input[0]);
             r = true;
-        } else {
-            roots[input[0]] = false;
         }
+        return r;
+    }
 
+    function commitPlonkProof(bytes memory proof, uint256[] memory pubSignals)
+        public
+        returns (bool r)
+    {
+        r = false;
+        if (plonk_verifier.verifyProof(proof, pubSignals)) {
+            commitRoot(pubSignals[1], pubSignals[0]);
+            r = true;
+        }
         return r;
     }
 
