@@ -9,7 +9,7 @@ const bridgeABI = cfgMod.bridgeABI;
 function buildBridge() {
     var Contract = require('web3-eth-contract');
     Contract.setProvider('ws://localhost:8546');
-    return new BridgeProxy(new Contract(bridgeABI, config.bridgeAddress))
+    return new BridgeProxy(new Contract(bridgeABI, config.bridge.address))
 }
 
 class BridgeProxy {
@@ -19,11 +19,7 @@ class BridgeProxy {
     }
 
     async commitGroth16Proof(a, b, c, input) {
-        if (this.personal == null) {
-            var Personal = require('web3-eth-personal');
-            this.personal = new Personal('ws://localhost:8546');
-            await this.personal.importRawKey(config.testPrvKey, config.testPwd)
-        }
+        await this.try_import_key()
 
         logger.debug("commit groth16 proof", a, b, c, input)
         try {
@@ -42,11 +38,7 @@ class BridgeProxy {
     }
 
     async commitPlonkProof(proof, input) {
-        if (this.personal == null) {
-            var Personal = require('web3-eth-personal');
-            this.personal = new Personal('ws://localhost:8546');
-            await this.personal.importRawKey(config.testPrvKey, config.testPwd)
-        }
+        await this.try_import_key()
 
         logger.debug("commit plonk proof", proof, input)
         try {
@@ -64,16 +56,34 @@ class BridgeProxy {
         }
     }
 
+    async deposit(pub, value) {
+        await this.try_import_key()
+
+        await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
+        const res = await this.bridge.methods.deposit(pub).send({ from: config.testAddress, value: value })
+    }
+
+    async withdraw(l2pub, l2pubForProof, amount, proof, proofPos) {
+        await this.try_import_key()
+
+        await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
+        const res = await this.bridge.methods.withdraw(l2pub, l2pubForProof, amount, proof, proofPos).send({ from: config.testAddress })
+    }
+
     async claimWithdraw(pub) {
+        await this.try_import_key()
+
+        logger.debug("claim withdraw", pub)
+        await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
+        await this.bridge.methods.claimWithdraw(pub).send({ from: config.testAddress })
+    }
+
+    async try_import_key() {
         if (this.personal == null) {
             var Personal = require('web3-eth-personal');
             this.personal = new Personal('ws://localhost:8546');
             await this.personal.importRawKey(config.testPrvKey, config.testPwd)
         }
-
-        logger.debug("claim withdraw", pub)
-        await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
-        await this.bridge.methods.claimWithdraw(pub).send({ from: config.testAddress })
     }
 }
 

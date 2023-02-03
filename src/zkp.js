@@ -7,7 +7,7 @@ const logger = Logger.create("zkp");
 Logger.setLogLevel("INFO");
 
 let path = require("path");
-const wasm_file = path.join(__dirname, "../data/single_tx.wasm")
+const wasm_file = path.join(__dirname, "../setup/single_tx.wasm")
 
 
 
@@ -19,7 +19,7 @@ parentPort.on("message", (zkp_inputs) => {
 */
 
 async function submitProve(inputs, zkProtocol) {
-    const zkey1_file = path.join(__dirname, `../data/${zkProtocol}_single_tx_0001.zkey`)
+    const zkey1_file = path.join(__dirname, `../setup/${zkProtocol}_single_tx_0001.zkey`)
     // generate witness
     const witness = await gen_witness(inputs)
 

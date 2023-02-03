@@ -6,27 +6,13 @@ set -a
 set -m
 #set -x # activate debugging
 
-Groth16="groth16"
-Plonk="plonk"
-
-NAME="single_tx"
-PROTOCOL=${Groth16}
 POWER=15
 
-while getopts "p:c:" opt; do
+while getopts "p:" opt; do
   case $opt in
   p)
     echo "POWER=$OPTARG"
     POWER=$OPTARG
-    ;;
-  c)
-    echo "PROTOCOL=$OPTARG"
-    PROTOCOL=$OPTARG
-    if [[ "$PROTOCOL" != "$Groth16" && "$PROTOCOL" != "$Plonk" ]]
-    then
-      echo "unsupport zk protocol ${PROTOCOL}"
-      exit 1
-    fi
     ;;
   \?)
     echo "Invalid option: -$OPTARG"
@@ -35,38 +21,38 @@ while getopts "p:c:" opt; do
 done
 
 # compile circuit
-circom ${NAME}.circom --r1cs --wasm
+circom single_tx.circom --r1cs --wasm
 
-cd ./${NAME}_js
+cd ./single_tx_js
 
 # phase 1: Powers of Tau
-snarkjs powersoftau new bn128 ${POWER} pot${POWER}_0000.ptau -v
-snarkjs powersoftau contribute pot${POWER}_0000.ptau pot${POWER}_0001.ptau --name="First contribution" -v -e="adso"
+snarkjs powersoftau new bn128 ${POWER} pot_0000.ptau 
+snarkjs powersoftau contribute pot_0000.ptau pot_0001.ptau --name="First contribution" -v -e="adso"
 
 # phase 2: circuit-specific
-snarkjs powersoftau prepare phase2 pot${POWER}_0001.ptau pot${POWER}_final.ptau -v
+snarkjs powersoftau prepare phase2 pot_0001.ptau pot_final.ptau 
 
-if [ "$PROTOCOL" == "$Plonk" ]
-then
-  echo "plonk"
-  snarkjs plonk setup ../${NAME}.r1cs pot${POWER}_final.ptau ${NAME}_0001.zkey
-fi
+# new plonk zkey
+echo "setup plonk"
+snarkjs plonk setup ../single_tx.r1cs pot_final.ptau plonk_single_tx_0001.zkey
 
-if [ "$PROTOCOL" == "$Groth16" ]
-then
-  echo "groth16"
-  snarkjs groth16 setup ../${NAME}.r1cs pot${POWER}_final.ptau ${NAME}_0000.zkey
-  snarkjs zkey contribute ${NAME}_0000.zkey ${NAME}_0001.zkey --name="1st Contributor Name"  -e="ok23"
-fi
+# new and contribute groth16 zkey
+echo "setup groth16"
+snarkjs groth16 setup ../single_tx.r1cs pot_final.ptau groth16_single_tx_0000.zkey
+snarkjs zkey contribute groth16_single_tx_0000.zkey groth16_single_tx_0001.zkey --name="1st Contributor Name"  -e="ok23"
 
-snarkjs zkey export solidityverifier ${NAME}_0001.zkey verifier.sol
+echo "zkey export"
+snarkjs zkey export solidityverifier plonk_single_tx_0001.zkey plonk_verifier.sol
+snarkjs zkey export solidityverifier groth16_single_tx_0001.zkey groth16_verifier.sol
 
 # we only need wasm, verifier.sol and zkey
-mv ${NAME}.wasm ../../data/${NAME}.wasm
-mv verifier.sol ../../contract/${PROTOCOL}_${NAME}_verifier.sol
-mv ${NAME}_0001.zkey ../../data/${PROTOCOL}_${NAME}_0001.zkey
+mv single_tx.wasm ../../setup/single_tx.wasm
+mv plonk_verifier.sol ../../setup/plonk_single_tx_verifier.sol
+mv plonk_single_tx_0001.zkey ../../setup/plonk_single_tx_0001.zkey
+mv groth16_verifier.sol ../../setup/groth16_single_tx_verifier.sol
+mv groth16_single_tx_0001.zkey ../../setup/groth16_single_tx_0001.zkey
 
 # remove the previously generated files
 cd ..
-rm -rf ${NAME}_js
-rm -r ${NAME}.r1cs
+rm -rf single_tx_js
+rm -r single_tx.r1cs

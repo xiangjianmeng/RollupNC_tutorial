@@ -19,7 +19,7 @@ async function main() {
         .parse(process.argv)
     const options = program.opts();
 
-    let dbpath = path.join(__dirname, "./data/demo.db")
+    let dbpath = path.join(__dirname, "./setup/demo.db")
     if (options.db != undefined) {
         dbpath = options.db
     }

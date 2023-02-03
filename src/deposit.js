@@ -26,7 +26,7 @@ function listenDepositEvent(merkle) {
 
     // DepositEvent log
     return web3.eth.subscribe("logs", {
-        address: config.bridgeAddress,
+        address: config.bridge.address,
         topics: config.depositEventTopic,
     }, function (error, log) {
         if (error) {

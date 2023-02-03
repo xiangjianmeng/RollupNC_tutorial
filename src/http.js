@@ -41,7 +41,7 @@ async function buildHttpServer(merkle, zkProtocol) {
         logger.debug(util.format("receive a request withdraw: %o", tx))
         const result = await txHandler.withdraw(tx)
         if (!result.success) {
-            res.send(result.msg)
+            res.send({ success: false, msg: result.msg })
             return
         }
 
@@ -52,15 +52,17 @@ async function buildHttpServer(merkle, zkProtocol) {
         var proof = []
         var pos = []
         for (var i = 0; i < merkleProof.proof.length; i++) {
-            proof.push(`"${F.toString(merkleProof.proof[i])}"`)
+            proof.push(F.toString(merkleProof.proof[i]))
             pos.push(merkleProof.pos[i].toString())
         }
-        const resp = `["0x${tx.pub[0].toString("hex")}", "0x${tx.pub[1].toString("hex")}"], ` +
-            `["${F.toString(tx.pub[0])}", "${F.toString(tx.pub[1])}"], ` +
-            `${balance}, ` +
-            `[${proof.join(',')}], ` +
-            `[${pos.join(',')}]`
-        res.send(resp)
+        const resp = {
+            l2pub: ["0x" + tx.pub[0].toString("hex"), "0x" + tx.pub[1].toString("hex")],
+            l2pubForProof: [F.toString(tx.pub[0]), F.toString(tx.pub[1])],
+            amount: balance,
+            proof: proof,
+            proofPos: pos,
+        }
+        res.send({ success: true, msg: resp })
     })
 
     app.get("/account", async function (req, res) {

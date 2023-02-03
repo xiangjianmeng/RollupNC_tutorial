@@ -117,7 +117,7 @@ class TxHandler {
 
         await this.merkle.setAccountEliminable(tx.pub)
 
-        bridgeProxy.claimWithdraw(tx.pub)
+        await bridgeProxy.claimWithdraw(tx.pub)
         return { success: true, balance: acc.balance, merkleProof: await this.merkle.getMerkleProof(tx.pub) }
     }
 }
