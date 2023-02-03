@@ -32,7 +32,7 @@ class BridgeProxy {
             logger.debug("contract verify failed")
             return false
         } catch (e) {
-            console.log(e)
+            logger.error(e)
             return false
         }
     }
@@ -51,7 +51,7 @@ class BridgeProxy {
             logger.debug("contract verify failed")
             return false
         } catch (e) {
-            console.log(e)
+            logger.error(e)
             return false
         }
     }
@@ -59,6 +59,7 @@ class BridgeProxy {
     async deposit(pub, value) {
         await this.try_import_key()
 
+        logger.debug("deposit", pub)
         await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
         const res = await this.bridge.methods.deposit(pub).send({ from: config.testAddress, value: value })
     }
@@ -66,6 +67,7 @@ class BridgeProxy {
     async withdraw(l2pub, l2pubForProof, amount, proof, proofPos) {
         await this.try_import_key()
 
+        logger.debug("withdraw", l2pub)
         await this.personal.unlockAccount(config.testAddress, config.testPwd, 10000)
         const res = await this.bridge.methods.withdraw(l2pub, l2pubForProof, amount, proof, proofPos).send({ from: config.testAddress })
     }

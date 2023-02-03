@@ -4,7 +4,6 @@ const snarkjs = require("snarkjs");
 
 const Logger = require("logplease");
 const logger = Logger.create("zkp");
-Logger.setLogLevel("INFO");
 
 let path = require("path");
 const wasm_file = path.join(__dirname, "../setup/single_tx.wasm")

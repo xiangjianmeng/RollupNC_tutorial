@@ -30,7 +30,7 @@ function listenDepositEvent(merkle) {
         topics: config.depositEventTopic,
     }, function (error, log) {
         if (error) {
-            console.log("DepositEvent error", error);
+            logger.error("DepositEvent error", error);
             return
         }
 

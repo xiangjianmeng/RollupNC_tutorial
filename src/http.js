@@ -13,6 +13,7 @@ async function buildHttpServer(merkle, zkProtocol) {
     app.use(express.json()) // for parsing application/json
 
     app.post('/transfer', async function (req, res) {
+        logger.debug("http transfer", req.body)
         const body = req.body
         const tx = {
             from: [Buffer.from(body.from[0], 'hex'), Buffer.from(body.from[1], 'hex')],
@@ -24,11 +25,11 @@ async function buildHttpServer(merkle, zkProtocol) {
                 S: BigInt(body.sign.S)
             }
         }
-        logger.debug(util.format("receive a request transfer: %o", tx))
         const { _, msg } = await txHandler.transfer(tx)
         res.send(msg)
     })
     app.post('/withdraw', async function (req, res) {
+        logger.debug("http withdraw", req.body)
         const body = req.body
         const tx = {
             pub: [Buffer.from(body.pub[0], 'hex'), Buffer.from(body.pub[1], 'hex')],
@@ -38,7 +39,6 @@ async function buildHttpServer(merkle, zkProtocol) {
                 S: BigInt(body.sign.S)
             }
         }
-        logger.debug(util.format("receive a request withdraw: %o", tx))
         const result = await txHandler.withdraw(tx)
         if (!result.success) {
             res.send({ success: false, msg: result.msg })

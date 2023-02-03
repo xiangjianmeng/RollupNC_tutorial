@@ -1,3 +1,5 @@
+const Logger = require('logplease');
+Logger.setLogLevel(Logger.LogLevels.INFO)
 const bridgeProxy = require("../src/bridge").bridgeProxy;
 let ks = require("../src/keystore");
 const util = require("util")
