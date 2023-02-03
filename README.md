@@ -87,4 +87,3 @@ node cli/withdraw.js --name <NAME> --nonce 0
 # TODO
 - [ ] 签名、计算 merkle root 时， nonce 没有参与
 - [ ] deposit 的值比较大(如 1okt, 1000000000000000000)，circom 验证失败
-- [ ] log 不起作用
