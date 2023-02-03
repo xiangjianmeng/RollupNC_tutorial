@@ -44,7 +44,7 @@ try_setup_rust() {
         return
     fi
 
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
     if ! program_exist 'cargo' ; then
         echo "rust setup failed"
@@ -82,7 +82,16 @@ try_setup_nvm() {
         return
     fi
 
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+    NVM_INSTALL_SH=$DIR/setup/nvm_install.sh
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh > $NVM_INSTALL_SH
+    curlecode=$?
+    if [ $curlecode -ne 0 ]; then 
+        NVM_INSTALL_SH=$DIR/scripts/nvm_install_v0.39.3.sh
+    fi
+    sh $NVM_INSTALL_SH
+
+    # load nvm
+    [ -s "$HOME/.nvm/nvm.sh" ] && \. "$HOME/.nvm/nvm.sh"
 
     if ! program_exist 'nvm' ; then
         echo "nvm setup failed"
